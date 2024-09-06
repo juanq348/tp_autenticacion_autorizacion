@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
-
-import { SECRET_KEY } from '../config/env.js';
+import { variablesBd } from '../config/config.js';
 import { database } from '../db/database.js';
 
 // Middleware para verificar el token JWT
@@ -15,7 +14,7 @@ export default async (req, res, next) => {
         return res.status(403).json({ message: 'Token no proporcionado' });
     }
 
-    const decoded = jwt.verify(token, SECRET_KEY);
+    const decoded = jwt.verify(token, variablesBd.SECRET_KEY);
 
     // Se busca al usuario en la base de datos
     const [rows] = await connection.query(`SELECT * FROM users WHERE id = ?`, [decoded.userId]);
