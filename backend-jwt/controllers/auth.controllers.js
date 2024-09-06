@@ -1,3 +1,4 @@
+import express from "express"
 import { database } from '../db/database.js';
 import generarJwt from '../helpers/generar-jwt.js';
 import validarJwt from '../middlewares/validar-jwt.js';
