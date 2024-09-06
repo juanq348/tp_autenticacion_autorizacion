@@ -1,61 +1,55 @@
 import { database } from "../db/database.js"
 
-export const inicioSesion = async (req,res) =>{
+export const inicioSesion = async (req, res) => {
     const { username, password } = req.body;
     const connection = await database();
-    try {
-        const [rows] = await connection.query(`SELECT * FROM users WHERE username = ? AND password = ?`, [username, password]);
-        if (rows.length > 0){
-            const user = rows[0];
+    const [user] = await connection.query("SELECT * FROM users WHERE username = ? AND password = ?",[username, password]
+    );
 
-            req.session.userId = user.id;
-            req.session.username = user.username;
+    const usuario = user[0];
 
-            return res.json({
-                message: "Inicio de sesión éxitoso",
-                user: {id: user.id, username: user.username}
-            });
-        } else {
-            return res.status(401).json({msg: "Las credenciales no coinciden"})
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Error en el servidor");
+    if (usuario) {
+      // Guardar información del usuario en la sesión
+    req.session.userId = usuario.id;
+    req.session.username = usuario.username;
+
+    return res.json({
+        message: "Inicio de sesión exitoso",
+        user: { id: user.id, username: user.username },
+    });
+    } else {
+    return res.status(401).json({ message: "Credenciales incorrectas" });
     }
-}
+};
 
 // Ruta para manejar el inicio de sesión
 export const registroUser = async (req, res) => {
     const { username, password } = req.body;
-    
-    try{
-    const connection  = await database();
+    const connection = await database()
+    const [usuarioRegistrado] = await connection.query("SELECT * FROM users WHERE username = ?", username)
+    if (usuarioRegistrado.length > 0) {
+        return res.status(409).json({ message: 'El nombre de usuario ya está en uso' });
+    }
 
-    await connection.query(
-        `INSERT INTO users (username, password) VALUES (?, ?)`, [username, password]
-    );
-    res.send("Registro éxitoso");
+    const [user] = await connection.query("INSERT INTO users (username, password) VALUES (?,?)", [username, password]);
 
-    connection.end();
-    } catch (error){
-        console.error(error);
-        res.status(500).send("Error en el servidor");
+    if (user) {
+        res.json({msg: "Usuario registrado correctamente"})
+    } else {
+        return res.status(500).json({ message: 'Error al crear el usuario' });
     }
 };
 
 // Ruta para obtener los datos de la sesión
-export const obtenerDatos = 
-async (req, res) => {
-    try {
-        const connection = await database();
-        const results = await connection.query(`SELECT * FROM users`);
-        res.json(results[0]);
-        connection.end();
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Error en el servidor");
+export const obtenerDatos =  (req, res) => {
+    if (req.session.userId) {
+        return res.json({ 
+            loggedIn: true, 
+            user: { id: req.session.userId, username: req.session.username } });
+    } else {
+        return res.status(401).json({ loggedIn: false, message: 'No hay sesión activa' });
     }
-};
+}
 
 // Ruta para cerrar la sesión
 export const cerrarSesion = 
