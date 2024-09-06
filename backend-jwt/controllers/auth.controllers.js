@@ -1,6 +1,3 @@
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import { SECRET_KEY } from '../config/env.js';
 import { database } from '../db/database.js';
 import generarJwt from '../helpers/generar-jwt.js';
 import validarJwt from '../middlewares/validar-jwt.js';
@@ -22,7 +19,7 @@ export const registroUser = async (req,res) => {
 
         await connection.query(`INSERT INTO users (username, password) VALUES (?, ?)`, [username, password]);
 
-        return res.json({msg: "Se ha registrado con éxotp"})
+        return res.json({msg: "Se ha registrado con éxito"})
     } catch (error) {
         return res.status(500).json({msg:"Error inesperado"});
     }
